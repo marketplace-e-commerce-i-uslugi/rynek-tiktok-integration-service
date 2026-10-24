@@ -102,9 +102,9 @@ Wiersze z §17, w których występuje `tiktok-integration` (publikuje lub słuch
 
 Etap z §19: 4. `tiktok-integration-service` — połączenie konta, lista filmów, osadzanie; **najpierw ścieżka z linkiem (oEmbed) i z `video.list`**, publikowanie na TikTok dopiero po decyzji o audycie.
 
-## Do rozstrzygnięcia
+## Wyjątki routingu
 
-Gateway (§2) kieruje ruch po prefiksie ścieżki, a poniższe endpointy leżą pod prefiksem innego serwisu. Możliwe rozwiązania: szczegółowe trasy w gateway przed trasami prefiksowymi albo zmiana ścieżek.
+Gateway (§2) kieruje ruch po prefiksie ścieżki, a poniższe endpointy leżą pod prefiksem innego serwisu. Gateway obsługuje je trasami szczegółowymi (`order: -1`), które mają pierwszeństwo przed trasami po prefiksie. Ścieżki pozostają bez zmian (decyzja z 2026-10-24). Test `RoutingTests` w `rynek-api-gateway` sprawdza, czy każda z nich trafia do właściwego serwisu.
 
-- `/api/v1/offers/{offerId}/video`: według dokumentu należy do `tiktok-integration-service`, ale prefiks w gateway kieruje do `catalog-service`.
-- `/api/v1/channels/{channelId}/videos`: według dokumentu należy do `tiktok-integration-service`, ale prefiks w gateway kieruje do `channel-service`.
+- `/api/v1/offers/{offerId}/video`: należy do `tiktok-integration-service` (prefiks wskazuje `catalog-service`).
+- `/api/v1/channels/{channelId}/videos`: należy do `tiktok-integration-service` (prefiks wskazuje `channel-service`).
