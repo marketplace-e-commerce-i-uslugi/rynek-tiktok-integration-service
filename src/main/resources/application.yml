@@ -4,6 +4,40 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  datasource:
+    # Lokalnie: rynek-infra/local (docker compose). Inne środowiska ustawiają zmienne.
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/tiktok}
+    username: ${DB_USER:tiktok}
+    password: ${DB_PASSWORD:tiktok}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+rynek:
+  channel:
+    url: ${CHANNEL_SERVICE_URL:http://localhost:8082}
+  catalog:
+    url: ${CATALOG_SERVICE_URL:http://localhost:8083}
+  jwt:
+    jwk-set-uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}/internal/auth/jwks
+    issuer: ${JWT_ISSUER:rynek-identity}
+  tiktok:
+    # Dostawca wideo za interfejsem VideoProvider. Na razie jest tylko „sandbox” (symulator TikToka: zgoda OAuth, filmy konta,
+    # odtwarzacz, publikacja). Prawdziwy TikTok wymaga client_key i client_secret z konsoli deweloperskiej oraz audytu aplikacji.
+    provider: ${TIKTOK_PROVIDER:sandbox}
+    # Adres gatewaya widoczny z przeglądarki (strony symulatora i redirect_uri).
+    public-url: ${TIKTOK_PUBLIC_URL:http://localhost:8080}
+    # Adres frontendu, na który wracamy po zgodzie (albo odmowie) na stronie TikToka.
+    frontend-url: ${FRONTEND_URL:http://localhost:4200}
+    # Klucz szyfrowania tokenów w bazie (AES-GCM); w produkcji z sekretów.
+    token-key: ${TIKTOK_TOKEN_KEY:rynek-local-token-key}
+    # Podpis webhooków TikToka (HMAC-SHA256 w nagłówku X-Signature).
+    webhook-secret: ${TIKTOK_WEBHOOK_SECRET:rynek-sandbox-local}
+    # Zadania w tle: odświeżanie tokenów przed wygaśnięciem i synchronizacja filmów co 12 h.
+    jobs-enabled: true
+    jobs-interval: 10m
+    sync-every: 12h
 
 server:
   port: ${PORT:8085}

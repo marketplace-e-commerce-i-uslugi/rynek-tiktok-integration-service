@@ -2,7 +2,7 @@
 
 Mikroserwis platformy **Rynek**: `tiktok-integration-service` — TikTok (konto, filmy, publikowanie)
 
-Zakres, endpointy i zdarzenia są opisane w `README.md`. Na razie to szkielet: endpointy zwracają 501, DTO są puste. Nie dodawaj logiki bez wyraźnej prośby.
+Zakres, endpointy i zdarzenia są opisane w `README.md`. Wszystkie endpointy działają na symulatorze `sandbox` za interfejsem `VideoProvider`; prawdziwego TikToka i Kafki nie dodawaj bez wyraźnej prośby.
 
 ## Wspólne konwencje API (§1 dokumentu architektury)
 
@@ -35,6 +35,6 @@ Legenda kolumny **Dostęp**: `pub` = bez logowania, `user` = zalogowany, `seller
 
 ## Struktura kodu
 
-- `pl.rynek.tiktokintegration.api`: kontrolery REST (pełne ścieżki w adnotacjach), `api.dto`: rekordy żądań, `common.NotImplemented`: odpowiedź 501
+- `pl.rynek.tiktokintegration.api`: kontrolery REST (pełne ścieżki w adnotacjach), `Dtos`, `SandboxController` (strony symulatora); `connection`: połączenie, OAuth `state`, synchronizacja, publikacje (`TiktokService`, `TiktokJobs`); `video`: filmy i przypisanie do ofert; `provider`: `VideoProvider` i `SandboxVideoProvider`; `clients`: channel i catalog; `common`: szyfrowanie tokenów, podpis webhooka, kursory; `config`: Spring Security (JWT z JWKS), błędy RFC 7807
 - Konfiguracja: `src/main/resources/application.yml`
 - Port lokalny: 8085

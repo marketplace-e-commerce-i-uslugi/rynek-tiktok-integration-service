@@ -2,12 +2,21 @@
 
 `tiktok-integration-service` — TikTok (konto, filmy, publikowanie)
 
-> Status: **szkielet**. Wszystkie endpointy z tabeli istnieją w kontrolerach (`src/main/java/.../api/`) i zwracają `501 Not Implemented` (RFC 7807). Ciała żądań to puste rekordy w `api/dto/`.
+> Status: **działa na symulatorze `sandbox`** (PostgreSQL, Flyway, JWT z JWKS, bez Kafki). Prawdziwego dostawcy TikTok nie ma, bo wymaga `client_key` i `client_secret` z konsoli deweloperskiej oraz audytu aplikacji; jest za interfejsem `VideoProvider`, więc dojdzie bez zmian w reszcie systemu.
+
+- **Połączenie konta:** `connect/url` zwraca adres strony zgody symulatora (z jednorazowym, 10-minutowym `state`), „Zezwól” wraca na `callback`, który wymienia kod na tokeny (zapis zaszyfrowany AES-GCM kluczem `TIKTOK_TOKEN_KEY`), robi pierwszą synchronizację i przekierowuje na `/sprzedawca/filmy?tiktok=connected|denied|error`.
+- **Filmy konta:** symulator oddaje 8 stałych filmów na konto (6 pionowych, 2 poziome). Synchronizacja (ręczna, przy łączeniu i co 12 h) dodaje, odświeża i oznacza usunięte (`REMOVED` znika z odtwarzania i Shortów; oferta zachowuje `videoId` i pokazuje się bez filmu).
+- **Przypisanie do oferty:** `attach` i `by-link` sprawdzają w catalog, że oferta (także szkic) jest z kanału sprzedawcy; oferta ma najwyżej jeden film, a film jedną ofertę. Catalog przy zapisie `videoId` woła `PUT /internal/offers/{id}/video`.
+- **Link:** `by-link` przyjmuje `https://www.tiktok.com/@konto/video/<id>` (sandbox czyta link bez internetu); w sandboxie `embedUrl` to odtwarzacz symulatora (id z linku bywa fałszywe, a symulator nie łączy się z tiktok.com), a prawdziwy dostawca da `https://www.tiktok.com/embed/v2/<id>`. Ten sam link zwraca ten sam film. Film z linku nie ma znanej długości (`durationSec` 0), więc karta oferty nie pokazuje czasu.
+- **Odtwarzacz:** `embedUrl` filmów konta w sandboxie to `/api/v1/tiktok/sandbox/player/{externalId}` (strona w iframe, ramki dozwolone z tej samej domeny: `X-Frame-Options: SAMEORIGIN` w serwisie i gateway). Okładka to `/sandbox/cover/{externalId}` (SVG).
+- **Publikacja:** `posts` wymaga połączenia ze zgodą `video.publish` i oferty własnego kanału; status sandboxu to `PRIVATE_ONLY` (aplikacja przed audytem). Webhook `POST /tiktok/webhooks` z podpisem HMAC (`X-Signature`, sekret `TIKTOK_WEBHOOK_SECRET`) zmienia status posta.
+- **Zadania w tle** (`rynek.tiktok.jobs-enabled`): co 10 min odświeżają tokeny wygasające w ciągu godziny i synchronizują konta nieodświeżane od 12 h.
+- **Bez:** zapisu nagranego filmu przez `mediaId` (pole przyjęte, ale nieużywane), oznaczania ofert po usunięciu filmu i limitów zapytań TikToka (6/min na init publikacji).
 
 ## Uruchomienie
 
 ```bash
-./mvnw spring-boot:run   # port 8085, zmienna PORT
+./mvnw spring-boot:run   # port 8085, zmienna PORT; baza `tiktok` z rynek-infra/local
 ./mvnw verify            # testy
 ```
 
